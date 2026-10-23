@@ -87,9 +87,9 @@ const PROVIDERS = {
 
 const ORDER = (process.env.PROVIDERS || 'claude,gemini,groq,openrouter,mistral').split(',').map(s => s.trim());
 
-async function generate(system, user) {
+async function generate(system, user, order = ORDER) {
   const tried = [];
-  for (const name of ORDER) {
+  for (const name of order) {
     const p = PROVIDERS[name];
     if (!p || !p.available()) { tried.push(`${name}: not configured`); continue; }
     try { return { provider: name, text: (await p.run(system, user)).trim() }; }

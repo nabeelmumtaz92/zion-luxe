@@ -6,3 +6,10 @@
 - `inquiries.html` is the dashboard: open the original post, edit/copy the draft, set status and follow-up.
 - `site/` is the earlier Phase 1 landing page (not deployed; kept for later). `zion.html`, `scraper-worker.js`, `leads.json` are the original mock dashboard with simulated leads.
 - Data lives in `data/` (git-ignored).
+
+## Second computer (laptop)
+`git clone https://github.com/nabeelmumtaz92/zion-luxe.git ~/zion-luxe && ~/zion-luxe/scripts/setup.sh`, then `node server.js`.
+Each computer keeps its own `data/` (leads, drafts, statuses are not synced). To avoid duplicate work, run the scraper on one machine
+(`SCRAPE=off node server.js` on the other) or open the main Mac's dashboard over Tailscale instead.
+Sources: many subreddits + Reddit searches, Cruise Critic, Mastodon hashtags, Lemmy. Blocked sites (FlyerTalk, Fodor's, TripAdvisor, Quora) are not bypassed.
+Leads get a priority score (★): bigger budgets and more luxurious asks first; all budgets are still shown.

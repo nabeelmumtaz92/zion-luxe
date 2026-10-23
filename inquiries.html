@@ -16,8 +16,8 @@ button{cursor:pointer;border-color:#D4AF37}textarea{width:100%;min-height:420px;
 <script>
 let data={statuses:[],items:[]},sel=null,editing=false;
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-async function load(){data=await (await fetch('/api/inquiries')).json();document.getElementById('n').textContent='('+data.items.length+')';
- document.getElementById('cards').innerHTML=data.items.map(q=>`<div class="card ${sel==q.id?'sel':''}" onclick="pick(${q.id})"><b>${esc(q.destination)}</b> <span class="gold" style="float:right">${esc(q.budget)}</span><div class="muted">${esc(q.name)} · ${esc(q.tripType)} · ${esc(q.travelers)} trav.</div><div class="muted">${esc(q.status)} · draft: ${esc(q.draftStatus)}</div></div>`).join('')||'<p class="muted">No inquiries yet.</p>';
+async function load(){data=await (await fetch('/api/inquiries')).json();data.items.sort((a,b)=>(b.priority||0)-(a.priority||0)||b.id-a.id);document.getElementById('n').textContent='('+data.items.length+')';
+ document.getElementById('cards').innerHTML=data.items.map(q=>`<div class="card ${sel==q.id?'sel':''}" onclick="pick(${q.id})"><b>${esc(q.destination)}</b> <span class="gold" style="float:right">${q.priority!=null?'★'+q.priority+' · ':''}${esc(String(q.budget).slice(0,24))}</span><div class="muted">${esc(q.name)} · ${esc(q.tripType)} · ${esc(q.travelers)} trav.</div><div class="muted">${esc(q.status)} · draft: ${esc(q.draftStatus)}</div></div>`).join('')||'<p class="muted">No inquiries yet.</p>';
  if(sel&&!editing)show();}
 function pick(id){sel=id;editing=false;load()}
 async function upd(id,o){await fetch('/api/inquiries/'+id,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(o)});editing=false;load()}
