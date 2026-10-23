@@ -1,7 +1,7 @@
 // ZionLuxe Leads — Google Apps Script web app (receives the site form and appends a row).
 // Setup: create a Google Sheet named "ZionLuxe Leads", Extensions > Apps Script, paste this file,
 // Deploy > New deployment > Web app (Execute as: Me, Access: Anyone). Paste the /exec URL into
-// FORM_ENDPOINT in script.js.
+// FORM_ENDPOINTS in script.js.
 const HEADERS = ["Date","Name","Phone","Email","Destination","Dates","Travelers","Trip type","Budget","Source","Status","Next follow-up","Notes"];
 
 function doPost(e) {

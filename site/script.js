@@ -1,9 +1,11 @@
 // ---- INTEGRATION POINT -------------------------------------------------
-// Paste your form backend URL here (Google Apps Script web app URL from
+// Paste your form backend URL(s) here (Google Apps Script web app URL from
 // apps-script/Code.gs, Formspree, etc.). Submissions POST as form data.
 // While this is empty, the form falls back to opening a pre-filled email to
 // the address below so no inquiry is lost.
-const FORM_ENDPOINT = "";
+// One or more URLs. Local dashboard server: "http://localhost:8787/api/lead" (needs a tunnel to be reachable
+// from the public site). Google Sheet: the Apps Script /exec URL.
+const FORM_ENDPOINTS = [];
 const FALLBACK_EMAIL = "nabeelmumtaz92@gmail.com";
 // ------------------------------------------------------------------------
 
@@ -39,9 +41,11 @@ form.addEventListener("submit", async (e) => {
   data.delete("website");
   btn.disabled = true;
 
-  if (FORM_ENDPOINT) {
+  if (FORM_ENDPOINTS.length) {
     try {
-      await fetch(FORM_ENDPOINT, { method: "POST", body: data, mode: "no-cors" });
+      const body = new URLSearchParams(data);
+      const results = await Promise.allSettled(FORM_ENDPOINTS.map((u) => fetch(u, { method: "POST", body, mode: "no-cors" })));
+      if (results.every((r) => r.status === "rejected")) throw new Error("all endpoints failed");
       showThanks();
     } catch (err) {
       btn.disabled = false;

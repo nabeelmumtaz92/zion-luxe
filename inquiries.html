@@ -1,0 +1,36 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Zion Luxe — Inquiries</title>
+<style>
+body{margin:0;font:15px/1.5 -apple-system,Segoe UI,sans-serif;background:#0B0B0E;color:#F4F4F6;display:flex;height:100vh}
+#list{width:380px;overflow:auto;border-right:1px solid #262630;padding:16px}
+#detail{flex:1;overflow:auto;padding:24px}
+h1{font-size:16px;color:#D4AF37;margin:0 0 12px;letter-spacing:1px}
+.card{background:#141419;border:1px solid #262630;border-radius:8px;padding:12px;margin-bottom:10px;cursor:pointer}
+.card:hover,.card.sel{border-color:#D4AF37}.muted{color:#9BA1A6;font-size:13px}.gold{color:#D4AF37}
+select,input,textarea,button{font:inherit;background:#1b1b22;color:#F4F4F6;border:1px solid #333;border-radius:6px;padding:6px 10px}
+button{cursor:pointer;border-color:#D4AF37}textarea{width:100%;min-height:420px;box-sizing:border-box}
+.row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:10px 0}
+</style></head><body>
+<div id="list"><h1>WEBSITE INQUIRIES <span id="n"></span></h1><div id="cards"></div></div>
+<div id="detail"><p class="muted">Select an inquiry.</p></div>
+<script>
+let data={statuses:[],items:[]},sel=null,editing=false;
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+async function load(){data=await (await fetch('/api/inquiries')).json();document.getElementById('n').textContent='('+data.items.length+')';
+ document.getElementById('cards').innerHTML=data.items.map(q=>`<div class="card ${sel==q.id?'sel':''}" onclick="pick(${q.id})"><b>${esc(q.destination)}</b> <span class="gold" style="float:right">${esc(q.budget)}</span><div class="muted">${esc(q.name)} · ${esc(q.tripType)} · ${esc(q.travelers)} trav.</div><div class="muted">${esc(q.status)} · draft: ${esc(q.draftStatus)}</div></div>`).join('')||'<p class="muted">No inquiries yet.</p>';
+ if(sel&&!editing)show();}
+function pick(id){sel=id;editing=false;load()}
+async function upd(id,o){await fetch('/api/inquiries/'+id,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(o)});editing=false;load()}
+function show(){const q=data.items.find(x=>x.id==sel);if(!q)return;
+ document.getElementById('detail').innerHTML=`<h1>${esc(q.name)}</h1>
+ <div class="muted">${esc(q.email)} · ${esc(q.phone)} · via ${esc(q.source||'—')} · ${esc(q.date.slice(0,10))}</div>
+ <p><b>${esc(q.destination)}</b> · ${esc(q.dates)} · ${esc(q.travelers)} travelers · ${esc(q.tripType)} · ${esc(q.budget)}</p><p class="muted">${esc(q.notes)}</p>
+ <div class="row">Status <select onchange="upd(${q.id},{status:this.value})">${data.statuses.map(s=>`<option ${s==q.status?'selected':''}>${esc(s)}</option>`).join('')}</select>
+ Next follow-up <input type="date" value="${esc(q.followUp)}" onchange="upd(${q.id},{followUp:this.value})">
+ <button onclick="upd(${q.id},{regenerate:1})">Regenerate draft</button>
+ <button onclick="navigator.clipboard.writeText(document.getElementById('d').value)">Copy draft</button>
+ <button onclick="upd(${q.id},{draft:document.getElementById('d').value})">Save edits</button></div>
+ <div class="muted">Draft: ${esc(q.draftStatus)}${q.draftProvider?' · by '+esc(q.draftProvider):''}</div>
+ <textarea id="d" oninput="editing=true">${esc(q.draft||'')}</textarea>`}
+load();setInterval(load,4000);
+</script></body></html>
