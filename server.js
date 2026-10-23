@@ -1,14 +1,16 @@
 #!/usr/bin/env node
 // Zion Luxe local server (runs on the Mac): receives website form submissions, stores them,
 // generates a draft itinerary, and serves the inquiries dashboard.
-//   node server.js        -> http://localhost:8787
+//   node server.js        -> http://localhost:8799
 const http = require('http'), fs = require('fs'), path = require('path');
 const { draftFor } = require('./itinerary/draft');
-const PORT = process.env.PORT || 8787;
+const PORT = process.env.PORT || 8799;
 const DB = path.join(__dirname, 'data', 'inquiries.json');
 fs.mkdirSync(path.dirname(DB), { recursive: true });
 const load = () => { try { return JSON.parse(fs.readFileSync(DB, 'utf8')); } catch { return []; } };
 const save = (x) => fs.writeFileSync(DB, JSON.stringify(x, null, 2));
+const SEEN = path.join(__dirname, 'data', 'screened.json');
+const seenFile = { get: () => { try { return JSON.parse(fs.readFileSync(SEEN, 'utf8')); } catch { return []; } }, set: (x) => fs.writeFileSync(SEEN, JSON.stringify(x)) };
 const STATUSES = ['New', 'Contacted', 'Proposal sent', 'Booked', 'Traveled', 'Not a fit / No response'];
 
 function body(req) {
@@ -65,4 +67,5 @@ const server = http.createServer(async (req, res) => {
     send(404, { error: 'not found' });
   } catch (e) { send(500, { error: e.message }); }
 });
-server.listen(PORT, () => console.log(`Zion Luxe server on http://localhost:${PORT}`));
+server.listen(PORT, '127.0.0.1', () => console.log(`Zion Luxe (private) on http://localhost:${PORT}`));
+if (process.env.SCRAPE !== 'off') require('./scraper').start({ load, save, makeDraft, seenFile }, (m) => console.log(new Date().toLocaleTimeString(), m));

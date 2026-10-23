@@ -11,7 +11,7 @@ select,input,textarea,button{font:inherit;background:#1b1b22;color:#F4F4F6;borde
 button{cursor:pointer;border-color:#D4AF37}textarea{width:100%;min-height:420px;box-sizing:border-box}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:10px 0}
 </style></head><body>
-<div id="list"><h1>WEBSITE INQUIRIES <span id="n"></span></h1><div id="cards"></div></div>
+<div id="list"><h1>LEADS <span id="n"></span></h1><div id="cards"></div></div>
 <div id="detail"><p class="muted">Select an inquiry.</p></div>
 <script>
 let data={statuses:[],items:[]},sel=null,editing=false;
@@ -24,7 +24,7 @@ async function upd(id,o){await fetch('/api/inquiries/'+id,{method:'POST',headers
 function show(){const q=data.items.find(x=>x.id==sel);if(!q)return;
  document.getElementById('detail').innerHTML=`<h1>${esc(q.name)}</h1>
  <div class="muted">${esc(q.email)} · ${esc(q.phone)} · via ${esc(q.source||'—')} · ${esc(q.date.slice(0,10))}</div>
- <p><b>${esc(q.destination)}</b> · ${esc(q.dates)} · ${esc(q.travelers)} travelers · ${esc(q.tripType)} · ${esc(q.budget)}</p><p class="muted">${esc(q.notes)}</p>
+ ${q.postUrl?`<p><a style="color:#D4AF37" href="${esc(q.postUrl)}" target="_blank" rel="noopener">Open original post ↗</a> <span class="muted">${esc(q.why||'')}</span></p>`:''}<p><b>${esc(q.destination)}</b> · ${esc(q.dates)} · ${esc(q.travelers)} travelers · ${esc(q.tripType)} · ${esc(q.budget)}</p><p class="muted">${esc(q.notes)}</p>
  <div class="row">Status <select onchange="upd(${q.id},{status:this.value})">${data.statuses.map(s=>`<option ${s==q.status?'selected':''}>${esc(s)}</option>`).join('')}</select>
  Next follow-up <input type="date" value="${esc(q.followUp)}" onchange="upd(${q.id},{followUp:this.value})">
  <button onclick="upd(${q.id},{regenerate:1})">Regenerate draft</button>

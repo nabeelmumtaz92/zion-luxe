@@ -3,7 +3,7 @@
 // apps-script/Code.gs, Formspree, etc.). Submissions POST as form data.
 // While this is empty, the form falls back to opening a pre-filled email to
 // the address below so no inquiry is lost.
-// One or more URLs. Local dashboard server: "http://localhost:8787/api/lead" (needs a tunnel to be reachable
+// One or more URLs. Local dashboard server: "http://localhost:8799/api/lead" (needs a tunnel to be reachable
 // from the public site). Google Sheet: the Apps Script /exec URL.
 const FORM_ENDPOINTS = [];
 const FALLBACK_EMAIL = "nabeelmumtaz92@gmail.com";

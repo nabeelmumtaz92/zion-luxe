@@ -25,8 +25,9 @@ One line: Nabeel will follow up personally to refine this together.
 Sign off: Nabeel Mumtaz, Zion Luxe, LLC · (636) 214-7701 · nabeelmumtaz92@gmail.com`;
 
 function userPrompt(lead) {
+  const who = lead.forum ? "(public forum user: do NOT use their username; open with 'Hello,'. The source is their public post below, so keep it helpful and low-pressure.)" : lead.name;
   return `Write the draft proposal for this inquiry.
-Name: ${lead.name}
+Name: ${who}
 Destination(s): ${lead.destination}
 When: ${lead.dates}
 Travelers: ${lead.travelers}
