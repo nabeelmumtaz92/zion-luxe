@@ -9,6 +9,7 @@
 
 ## Second computer (laptop)
 `git clone https://github.com/nabeelmumtaz92/zion-luxe.git ~/zion-luxe && ~/zion-luxe/scripts/setup.sh`, then `node server.js`.
+Windows (HP laptop), in PowerShell: `irm https://raw.githubusercontent.com/nabeelmumtaz92/zion-luxe/main/scripts/setup-windows.ps1 | iex` — installs Git/Node if missing, clones to `~\zion-luxe`, and adds a "Zion Luxe" Desktop shortcut (runs with the scraper off). Re-run to update.
 Each computer keeps its own `data/` (leads, drafts, statuses are not synced). To avoid duplicate work, run the scraper on one machine
 (`SCRAPE=off node server.js` on the other) or open the main Mac's dashboard over Tailscale instead.
 Sources: many subreddits + Reddit searches, Cruise Critic, Mastodon hashtags, Lemmy. Blocked sites (FlyerTalk, Fodor's, TripAdvisor, Quora) are not bypassed.

@@ -1,0 +1,15 @@
+appId: com.zionluxe.app
+productName: Zion Luxe
+directories:
+  output: dist
+files:
+  - "**/*"
+  - "!node_modules/*"
+  - "node_modules/electron/**/*"
+win:
+  target: nsis
+  icon: site/images/hero-beach.jpg
+mac:
+  target: default
+linux:
+  target: AppImage

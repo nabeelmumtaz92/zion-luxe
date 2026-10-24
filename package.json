@@ -1,0 +1,23 @@
+{
+  "name": "zion-luxe",
+  "version": "1.0.0",
+  "description": "Private lead tool for luxury travel agents",
+  "author": "nabeelmumtaz92",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "build": "electron-builder build"
+  },
+  "keywords": [
+    "travel",
+    "lead",
+    "agent",
+    "scraper",
+    "luxury"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^26.1.0",
+    "electron-builder": "^26.15.3"
+  }
+}

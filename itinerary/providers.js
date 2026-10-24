@@ -19,7 +19,7 @@ function findClaude() {
   if (!fs.existsSync(ext)) return null;
   const dirs = fs.readdirSync(ext).filter(d => d.startsWith('anthropic.claude-code-')).sort().reverse();
   for (const d of dirs) {
-    const p = path.join(ext, d, 'resources', 'native-binary', 'claude');
+    const p = path.join(ext, d, 'resources', 'native-binary', process.platform === 'win32' ? 'claude.exe' : 'claude');
     if (fs.existsSync(p)) return p;
   }
   return null;
