@@ -35,7 +35,16 @@ async function makeDraft(id) {
   }
 }
 
+// Reachable from this Mac and from your own Tailscale devices (e.g. the laptop), nothing else
+const tailnetOnly = (ip) => {
+  ip = String(ip || '').replace(/^::ffff:/, '');
+  if (ip === '127.0.0.1' || ip === '::1' || ip.toLowerCase().startsWith('fd7a:115c:a1e0:')) return true;
+  const [a, b] = ip.split('.').map(Number);
+  return a === 100 && b >= 64 && b <= 127; // Tailscale's 100.64.0.0/10
+};
+
 const server = http.createServer(async (req, res) => {
+  if (!tailnetOnly(req.socket.remoteAddress)) { res.writeHead(403); return res.end(); }
   const cors = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'Content-Type', 'Access-Control-Allow-Methods': 'GET,POST,OPTIONS' };
   const send = (code, obj, type = 'application/json') => { res.writeHead(code, { 'Content-Type': type, ...cors }); res.end(type === 'application/json' ? JSON.stringify(obj) : obj); };
   const url = new URL(req.url, 'http://x');
@@ -67,5 +76,5 @@ const server = http.createServer(async (req, res) => {
     send(404, { error: 'not found' });
   } catch (e) { send(500, { error: e.message }); }
 });
-server.listen(PORT, '127.0.0.1', () => console.log(`Zion Luxe (private) on http://localhost:${PORT}`));
+server.listen(PORT, '::', () => console.log(`Zion Luxe (private) on http://localhost:${PORT} and over Tailscale on port ${PORT}`));
 if (process.env.SCRAPE !== 'off') require('./scraper').start({ load, save, makeDraft, seenFile }, (m) => console.log(new Date().toLocaleTimeString(), m));

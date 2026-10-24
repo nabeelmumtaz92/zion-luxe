@@ -3,5 +3,4 @@ itinerary/drafts/
 inbox/
 node_modules/
 .DS_Store
-start-windows.cmd
 dist/
