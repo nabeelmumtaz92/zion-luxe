@@ -35,6 +35,10 @@ async function makeDraft(id) {
   }
 }
 
+const scraper = require('./scraper');
+const api = { load, save, makeDraft, seenFile };
+const log = (m) => console.log(new Date().toLocaleTimeString(), m);
+
 // Reachable from this Mac and from your own Tailscale devices (e.g. the laptop), nothing else
 const tailnetOnly = (ip) => {
   ip = String(ip || '').replace(/^::ffff:/, '');
@@ -59,7 +63,11 @@ const server = http.createServer(async (req, res) => {
       makeDraft(q.id);
       return send(200, { ok: true });
     }
-    if (req.method === 'GET' && url.pathname === '/api/inquiries') return send(200, { statuses: STATUSES, items: load() });
+    if (req.method === 'GET' && url.pathname === '/api/inquiries') return send(200, { statuses: STATUSES, items: load(), scan: scraper.status() });
+    if (req.method === 'POST' && url.pathname === '/api/scan') { // "Scan now" on the dashboard; the 15-minute schedule keeps running
+      const started = scraper.run(api, log, true);
+      return send(200, { started, ...scraper.status() });
+    }
     const m = url.pathname.match(/^\/api\/inquiries\/(\d+)$/);
     if (req.method === 'POST' && m) { // update status / follow-up / notes / regenerate
       const d = parse(await body(req), req.headers['content-type']); const all = load(); const q = all.find(x => String(x.id) === m[1]);
@@ -77,4 +85,4 @@ const server = http.createServer(async (req, res) => {
   } catch (e) { send(500, { error: e.message }); }
 });
 server.listen(PORT, '::', () => console.log(`Zion Luxe (private) on http://localhost:${PORT} and over Tailscale on port ${PORT}`));
-if (process.env.SCRAPE !== 'off') require('./scraper').start({ load, save, makeDraft, seenFile }, (m) => console.log(new Date().toLocaleTimeString(), m));
+if (process.env.SCRAPE !== 'off') scraper.start(api, log);

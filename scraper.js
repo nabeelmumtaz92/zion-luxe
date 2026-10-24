@@ -121,8 +121,16 @@ async function scanOnce(api, log = console.log) {
   } finally { running = false; }
 }
 
-function start(api, log = console.log) {
-  const run = () => scanOnce(api, log).then(n => log(`scan done, ${n} new lead(s)`)).catch(e => log('scan error: ' + e.message));
-  run(); setInterval(run, EVERY_MIN * 60 * 1000);
+let last = null; // { at, added, error, manual } for the most recent finished scan
+function run(api, log = console.log, manual = false) {
+  if (running) return false;
+  scanOnce(api, log).then(n => { last = { at: Date.now(), added: n, manual }; log(`scan done, ${n} new lead(s)`); })
+    .catch(e => { last = { at: Date.now(), added: 0, error: e.message, manual }; log('scan error: ' + e.message); });
+  return true;
 }
-module.exports = { start, scanOnce, sources };
+const status = () => ({ running, last, everyMin: EVERY_MIN });
+
+function start(api, log = console.log) {
+  run(api, log); setInterval(() => run(api, log), EVERY_MIN * 60 * 1000);
+}
+module.exports = { start, run, status, scanOnce, sources };

@@ -11,14 +11,21 @@ select,input,textarea,button{font:inherit;background:#1b1b22;color:#F4F4F6;borde
 button{cursor:pointer;border-color:#D4AF37}textarea{width:100%;min-height:420px;box-sizing:border-box}
 .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:10px 0}
 </style></head><body>
-<div id="list"><h1>LEADS <span id="n"></span></h1><div id="cards"></div></div>
+<div id="list"><h1>LEADS <span id="n"></span></h1><div class="row"><button id="scan" onclick="scanNow()">Scan now</button><span id="scanmsg" class="muted"></span></div><div id="cards"></div></div>
 <div id="detail"><p class="muted">Select an inquiry.</p></div>
 <script>
 let data={statuses:[],items:[]},sel=null,editing=false;
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-async function load(){data=await (await fetch('/api/inquiries')).json();data.items.sort((a,b)=>(b.priority||0)-(a.priority||0)||b.id-a.id);document.getElementById('n').textContent='('+data.items.length+')';
+async function load(){data=await (await fetch('/api/inquiries')).json();data.items.sort((a,b)=>(b.priority||0)-(a.priority||0)||b.id-a.id);document.getElementById('n').textContent='('+data.items.length+')';scanInfo(data.scan);
  document.getElementById('cards').innerHTML=data.items.map(q=>`<div class="card ${sel==q.id?'sel':''}" onclick="pick(${q.id})"><b>${esc(q.destination)}</b> <span class="gold" style="float:right">${q.priority!=null?'★'+q.priority+' · ':''}${esc(String(q.budget).slice(0,24))}</span><div class="muted">${esc(q.name)} · ${esc(q.tripType)} · ${esc(q.travelers)} trav.</div><div class="muted">${esc(q.status)} · draft: ${esc(q.draftStatus)}</div></div>`).join('')||'<p class="muted">No inquiries yet.</p>';
  if(sel&&!editing)show();}
+let scanAsked=false;
+function scanInfo(st){if(!st)return;const b=document.getElementById('scan'),m=document.getElementById('scanmsg');b.disabled=st.running;b.textContent=st.running?'Scanning…':'Scan now';
+ if(st.running){m.textContent='Checking every source, takes a few minutes';return}
+ const l=st.last;if(!l){m.textContent='Auto-scan every '+st.everyMin+' min';return}
+ const t=new Date(l.at).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+ m.textContent=(l.error?'Scan failed: '+l.error.slice(0,60):(scanAsked&&l.manual?'Found ':'Last scan '+t+': ')+l.added+' new lead'+(l.added==1?'':'s'))+' · auto every '+st.everyMin+' min'}
+async function scanNow(){scanAsked=true;const r=await (await fetch('/api/scan',{method:'POST'})).json();scanInfo(r)}
 function pick(id){sel=id;editing=false;load()}
 async function upd(id,o){await fetch('/api/inquiries/'+id,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(o)});editing=false;load()}
 function show(){const q=data.items.find(x=>x.id==sel);if(!q)return;
