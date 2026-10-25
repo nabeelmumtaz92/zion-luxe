@@ -10,13 +10,13 @@ const MAX_PER_SCAN = Number(process.env.MAX_PER_SCAN || 40);
 // Qualification is high-volume: prefer free-tier AIs when configured, Claude as fallback.
 const QUALIFY_ORDER = (process.env.PROVIDERS_QUALIFY || 'gemini,groq,openrouter,mistral,claude').split(',').map(s => s.trim());
 
+// Trimmed Reddit subreddits to avoid rate limits (removed airline, airbnb, low-intent generic travel subs)
 const SUBS = (process.env.SUBREDDITS || [
-  'honeymoons', 'luxurytravel', 'FATTravel', 'solotravel', 'travel', 'Cruise', 'JapanTravel', 'ItalyTravel', 'Maldives',
-  'fatFIRE', 'awardtravel', 'churning', 'travelhacks', 'TravelHacks', 'Dubai', 'Greece', 'greecetravel', 'ThailandTourism',
-  'Bali', 'Hawaii', 'Mexico', 'caribbean', 'DisneyWorld', 'WeddingPlanning', 'weddingplanning', 'Europe', 'EuropeTravel',
-  'safari', 'Tanzania', 'Iceland', 'Switzerland', 'France', 'Spain', 'Portugal', 'Turkey', 'Egypt', 'Morocco', 'SouthAfrica',
-  'Cruise_Ships', 'FirstClass', 'delta', 'americanairlines', 'unitedairlines', 'emirates_airline', 'QatarAirways', 'singaporeair',
-  'ski', 'skiing', 'Yachting', 'sailing', 'Luxury', 'AirBnB', 'VacationRentals', 'tripplanning', 'ThailandTravel'
+  'honeymoons', 'luxurytravel', 'FATTravel', 'Cruise', 'JapanTravel', 'ItalyTravel', 'Maldives',
+  'fatFIRE', 'awardtravel', 'Dubai', 'Greece', 'greecetravel', 'ThailandTourism',
+  'Bali', 'Hawaii', 'Mexico', 'caribbean', 'WeddingPlanning', 'EuropeTravel',
+  'safari', 'Tanzania', 'Iceland', 'Switzerland', 'France', 'Spain', 'Portugal', 'Turkey', 'Morocco', 'SouthAfrica',
+  'Cruise_Ships', 'FirstClass', 'Yachting', 'sailing', 'Luxury', 'tripplanning'
 ].join(',')).split(',').map(s => s.trim()).filter((v, i, a) => v && a.indexOf(v) === i);
 const REDDIT_SEARCHES = (process.env.REDDIT_SEARCHES || [
   'honeymoon luxury resort', 'business class trip planning', 'first class flight booking', 'overwater villa', 'luxury hotel recommendation',
@@ -56,9 +56,40 @@ function sources() {
   for (const sub of SUBS) out.push({ name: `Reddit r/${sub}`, fetch: async () => parseAtom(await get(`https://www.reddit.com/r/${sub}/new.rss?limit=25`), `Reddit r/${sub}`) });
   for (const q of REDDIT_SEARCHES) out.push({ name: `Reddit search "${q}"`, fetch: async () =>
     parseAtom(await get(`https://www.reddit.com/search.rss?q=${encodeURIComponent(q)}&sort=new&t=week&limit=25`), 'Reddit search') });
-  out.push({ name: 'Cruise Critic forums', fetch: async () => parseRss(await get('https://boards.cruisecritic.com/discover/all.xml/'), 'Cruise Critic', 'cc:') });
-  for (const t of MASTODON_TAGS) out.push({ name: `Mastodon #${t}`, fetch: async () =>
-    parseRss(await get(`https://mastodon.social/tags/${t}.rss`), 'Mastodon #' + t, 'ms:') });
+  out.push({ name: 'Cruise Critic forums (All)', fetch: async () => parseRss(await get('https://boards.cruisecritic.com/discover/all.xml/'), 'Cruise Critic', 'cc:') });
+  // Dedicated Cruise Critic luxury line boards
+  for (const [name, id] of [
+    ['Regent Seven Seas', '360-regent-seven-seas-cruises'],
+    ['Seabourn', '361-seabourn'],
+    ['Silversea', '362-silversea-cruises'],
+    ['Oceania', '363-oceania-cruises'],
+    ['Viking', '674-viking'],
+    ['Ritz-Carlton Yacht Collection', '950-ritz-carlton-yacht-collection']
+  ]) {
+    out.push({ name: `Cruise Critic (${name})`, fetch: async () => {
+      try { return parseRss(await get(`https://boards.cruisecritic.com/forum/${id}.xml/`), 'Cruise Critic (' + name + ')', 'cc:' + id + ':'); }
+      catch { return []; }
+    }});
+  }
+  for (const t of MASTODON_TAGS) out.push({ name: `Mastodon #${t}`, fetch: async () => {
+    try { return parseRss(await get(`https://mastodon.social/tags/${t}.rss`), 'Mastodon #' + t, 'ms:'); } catch { return []; }
+  }});
+  // Bluesky public search API for travel intent
+  for (const q of ['honeymoon planning', 'luxury travel', 'safari lodge', 'overwater villa', 'cruise booking', 'anniversary trip']) {
+    out.push({ name: `Bluesky search "${q}"`, fetch: async () => {
+      try {
+        const j = await get(`https://public.api.bsky.app/xrpc/app.bsky.feed.searchPosts?q=${encodeURIComponent(q)}&limit=15`, true);
+        return (j.posts || []).map(p => ({
+          id: 'bs:' + p.uri,
+          title: (p.record?.text || '').split('\n')[0].slice(0, 100),
+          url: 'https://bsky.app/profile/' + p.author.handle + '/post/' + p.uri.split('/').pop(),
+          author: p.author.displayName || p.author.handle,
+          text: (p.record?.text || '').slice(0, 1500),
+          label: 'Bluesky search'
+        }));
+      } catch { return []; }
+    }});
+  }
   for (const q of LEMMY_QUERIES) out.push({ name: `Lemmy "${q}"`, fetch: async () => {
     const j = await get(`https://lemmy.world/api/v3/search?q=${encodeURIComponent(q)}&type_=Posts&sort=New&limit=20`, true);
     return (j.posts || []).map(p => ({ id: 'lm:' + p.post.ap_id, title: p.post.name, url: p.post.ap_id, author: p.creator?.name || 'unknown',
