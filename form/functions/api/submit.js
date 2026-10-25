@@ -1,6 +1,6 @@
 import { json } from './_lib.js';
 
-const FIELDS = { ref: 20, name: 120, email: 200, phone: 40, bestTime: 120, destination: 200, dates: 120, travelers: 60, notes: 3000 };
+const FIELDS = { ref: 20, name: 120, email: 200, phone: 40, bestTime: 120, destination: 200, dates: 120, travelers: 60, vibe: 200, mustHaves: 500, days: 20, gettingAround: 60, notes: 3000 };
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 export async function onRequestPost({ request, env }) {

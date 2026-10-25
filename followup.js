@@ -101,6 +101,10 @@ function createFollowup({ load, save, makeDraft, log }) {
       Object.assign(q, { name: s.name, email: s.email, phone: s.phone, bestTime: s.bestTime, okToText: !!s.okToText, formNotes: s.notes, formAt: s.at,
         status: 'Form filled', foundOnForum: q.foundOnForum || !!q.forum, forum: false });
       for (const k of ['destination', 'dates', 'travelers']) if (s[k]) q[k] = s[k];
+      // The 4 crucial questions, so the draft and call sheet use the answers
+      if (s.vibe) q.budget = s.vibe;
+      const plan = [s.days && `Days: ${s.days}`, s.mustHaves && `Non-negotiables: ${s.mustHaves}`, s.gettingAround && `Getting around: ${s.gettingAround}`].filter(Boolean).join('. ');
+      if (plan) q.notes = [plan, q.notes].filter(Boolean).join('\n\n');
       if (s.notes && q.source === 'Contact form') q.notes = s.notes;
       touched.push(q.id);
     }

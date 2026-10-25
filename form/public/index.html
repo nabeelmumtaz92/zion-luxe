@@ -33,6 +33,13 @@ button:disabled{opacity:.6}.hp{position:absolute;left:-9999px}.err{color:#F28B82
     <div><label for="dates">When</label><input id="dates" name="dates" placeholder="Month or dates"></div>
     <div><label for="travelers">Who's traveling</label><input id="travelers" name="travelers" placeholder="e.g. 2 adults"></div>
   </div>
+  <label for="vibe">Budget level and vibe</label><input id="vibe" name="vibe" placeholder="e.g. full five-star, relaxed boutique, adventure with comfort">
+  <label for="mustHaves">Non-negotiables</label><input id="mustHaves" name="mustHaves" placeholder="The experiences this trip has to include">
+  <div class="two">
+    <div><label for="days">How many days</label><input id="days" name="days" inputmode="numeric" placeholder="e.g. 9"></div>
+    <div><label for="gettingAround">Getting around</label><select id="gettingAround" name="gettingAround" style="width:100%;font:inherit;background:#141419;color:#F4F4F6;border:1px solid #2C2C36;border-radius:8px;padding:12px">
+      <option value="">Choose one</option><option>Happy to drive ourselves</option><option>Prefer private drivers and transfers</option><option>Not sure yet</option></select></div>
+  </div>
   <label for="notes">Anything else we should know?</label><textarea id="notes" name="notes" placeholder="Occasion, style, must-dos, hotels you've loved..."></textarea>
   <button id="go" type="submit">Send</button>
   <div class="err" id="err"></div>

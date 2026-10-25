@@ -79,10 +79,13 @@ ${String(lead.draft || '').slice(0, 3000)}`;
 }
 
 const REPLY_SYSTEM = `You write Nabeel Mumtaz's reply (Zion Luxe, luxury travel planning) to a traveler who answered his first private message
-about their trip. Calm, warm, understated, human. Plain text, no Markdown. 50 to 120 words. Open with "Hi," or their first name if they gave it.
+about their trip. Calm, warm, understated, human. Plain text, no Markdown. 70 to 170 words. Open with "Hi," or their first name if they gave it.
 - Respond to what they actually said first (thank them, answer their question honestly, or acknowledge a detail).
-- Then ask for what is still missing so Nabeel can send their draft itinerary and call them, as a short list, only the items not already given:
-  their name, best phone number, email address, and whether it is OK to text them at that number.
+- Then ask what is still missing, in two short numbered lists, leaving out anything already answered in the post or conversation:
+  "To shape the trip": 1. budget level and vibe (no numbers from us), 2. non-negotiables, 3. how many days they have,
+     4. driving themselves vs private drivers/transfers (name the relevant kind of driving for the destination).
+  "To send your draft and call you": 1. their name, 2. best phone number, 3. email address, 4. whether it is OK to text them there.
+  If everything in a list is already known, leave that list out.
 - Mention they can instead fill in the short form at the link: put the exact text {LINK} on its own line.
 - If they say they are not interested, reply graciously in one or two sentences, ask for nothing, and leave out {LINK}.
 - End with: Nabeel, Zion Luxe
