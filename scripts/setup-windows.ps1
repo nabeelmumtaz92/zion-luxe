@@ -19,8 +19,13 @@ if (Test-Path $Tailscale) {
   }
 }
 
+$IconDir = Join-Path $env:LOCALAPPDATA 'ZionLuxe'
+$Icon = Join-Path $IconDir 'zionluxe.ico'
+New-Item -ItemType Directory -Force $IconDir | Out-Null
+try { Invoke-WebRequest -UseBasicParsing 'https://raw.githubusercontent.com/nabeelmumtaz92/zion-luxe/main/icon/zionluxe.ico' -OutFile $Icon } catch { Write-Host 'Could not download the icon; the shortcut will use the browser icon.' }
+
 $Link = Join-Path ([Environment]::GetFolderPath('Desktop')) 'Zion Luxe.url'
-"[InternetShortcut]`r`nURL=$Url/`r`n" | Set-Content -Encoding ASCII $Link
+"[InternetShortcut]`r`nURL=$Url/`r`nIconFile=$Icon`r`nIconIndex=0`r`n" | Set-Content -Encoding ASCII $Link
 
 try {
   Invoke-WebRequest -UseBasicParsing -TimeoutSec 10 "$Url/api/inquiries" | Out-Null
