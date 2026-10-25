@@ -1,0 +1,22 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Zion Luxe — Thank you</title><meta name="robots" content="noindex">
+<style>
+body{margin:0;font:16px/1.55 -apple-system,"Segoe UI",Helvetica,Arial,sans-serif;background:#0B0B0E;color:#F4F4F6}
+main{max-width:560px;margin:0 auto;padding:60px 20px}.brand{color:#D4AF37;letter-spacing:4px;font-size:13px;text-transform:uppercase}
+h1{font-weight:500;font-size:28px;margin:10px 0 8px}p{color:#B9BEC4}
+a.btn{display:inline-block;margin-top:18px;background:#D4AF37;color:#0B0B0E;text-decoration:none;font-weight:600;border-radius:8px;padding:14px 22px}
+</style></head><body><main>
+<div class="brand">Zion Luxe</div>
+<h1 id="h">Thank you</h1>
+<p>Your draft itinerary is being put together now and will arrive by email shortly. Nabeel will review it with you on a short call.</p>
+<div id="book" hidden><p>If you'd like, pick a time for that call now:</p><a class="btn" id="cal" target="_blank" rel="noopener">Choose a call time</a></div>
+</main>
+<script>
+const n = new URLSearchParams(location.search).get('n');
+if (n) document.getElementById('h').textContent = 'Thank you, ' + n.slice(0, 40);
+fetch('/api/config').then(r => r.json()).then(c => {
+  if (!/^https:\/\/calendly\.com\//.test(c.calendly)) return;
+  document.getElementById('cal').href = c.calendly;
+  document.getElementById('book').hidden = false;
+}).catch(() => {});
+</script></body></html>

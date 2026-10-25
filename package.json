@@ -19,5 +19,8 @@
   "devDependencies": {
     "electron": "^26.1.0",
     "electron-builder": "^26.15.3"
+  },
+  "dependencies": {
+    "nodemailer": "^7.0.13"
   }
 }

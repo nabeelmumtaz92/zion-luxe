@@ -45,15 +45,16 @@ const PROVIDERS = {
     run: (system, user) => new Promise((resolve, reject) => {
       const bin = findClaude();
       const args = ['-p', user, '--append-system-prompt', system, '--tools', ''];
-      execFile(bin, args, { timeout: 240000, maxBuffer: 10 * 1024 * 1024 }, (err, out, errout) =>
+      const child = execFile(bin, args, { timeout: 240000, maxBuffer: 10 * 1024 * 1024 }, (err, out, errout) =>
         err ? reject(new Error((errout || err.message).slice(0, 300))) : resolve(out));
+      child.stdin.end(); // no piped input: otherwise the CLI waits for stdin when run in the background
     }),
   },
   // Google AI Studio free tier
   gemini: {
     available: () => !!process.env.GEMINI_API_KEY,
     run: async (system, user) => {
-      const model = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+      const model = process.env.GEMINI_MODEL || 'gemini-flash-latest';
       const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-goog-api-key': process.env.GEMINI_API_KEY },

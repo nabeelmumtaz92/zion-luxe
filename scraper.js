@@ -29,7 +29,7 @@ const LEMMY_QUERIES = ['luxury travel', 'honeymoon', 'business class', 'resort r
 const INTENT = /\b(honeymoon|anniversary|itinerary|recommend\w*|planning|booking|book|resort|villa|first class|business class|luxury|safari|overwater|yacht|cruise|suite|private|hotel|trip|vacation|looking for|suggestions?)\b/i;
 const SKIP = /\b(trip report|review|just got back|returned from|megathread|weekly|daily thread)\b/i;
 
-const decode = s => s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;|&#x27;|&apos;/g, "'").replace(/&amp;/g, '&');
+const decode = s => s.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&#39;|&#x27;|&apos;/g, "'").replace(/&#(\d+);/g, (_, n) => String.fromCharCode(n)).replace(/&amp;/g, '&');
 const strip = h => decode(decode(h)).replace(/<!\[CDATA\[|\]\]>/g, '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
 const tag = (x, t) => (x.match(new RegExp(`<${t}[^>]*>([\\s\\S]*?)</${t}>`)) || [])[1] || '';
 const sleep = ms => new Promise(r => setTimeout(r, ms));

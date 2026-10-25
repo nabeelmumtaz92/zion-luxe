@@ -36,8 +36,10 @@ async function makeDraft(id) {
 }
 
 const scraper = require('./scraper');
+const { createFollowup, md, esc } = require('./followup');
 const api = { load, save, makeDraft, seenFile };
 const log = (m) => console.log(new Date().toLocaleTimeString(), m);
+const followup = createFollowup({ load, save, makeDraft, log });
 
 // Reachable from this Mac and from your own Tailscale devices (e.g. the laptop), nothing else
 const tailnetOnly = (ip) => {
@@ -63,13 +65,13 @@ const server = http.createServer(async (req, res) => {
       makeDraft(q.id);
       return send(200, { ok: true });
     }
-    if (req.method === 'GET' && url.pathname === '/api/inquiries') return send(200, { statuses: STATUSES, items: load(), scan: scraper.status() });
+    if (req.method === 'GET' && url.pathname === '/api/inquiries') return send(200, { statuses: STATUSES, items: load(), scan: scraper.status(), followup: followup.setup() });
     if (req.method === 'POST' && url.pathname === '/api/scan') { // "Scan now" on the dashboard; the 15-minute schedule keeps running
       const started = scraper.run(api, log, true);
       return send(200, { started, ...scraper.status() });
     }
     const m = url.pathname.match(/^\/api\/inquiries\/(\d+)$/);
-    if (req.method === 'POST' && m) { // update status / follow-up / notes / regenerate
+    if (req.method === 'POST' && m) { // update status / follow-up / notes / regenerate / email / outreach
       const d = parse(await body(req), req.headers['content-type']); const all = load(); const q = all.find(x => String(x.id) === m[1]);
       if (!q) return send(404, { error: 'not found' });
       if (STATUSES.includes(d.status)) q.status = d.status;
@@ -77,7 +79,13 @@ const server = http.createServer(async (req, res) => {
       if (d.draft !== undefined) q.draft = clean(d.draft, 20000);
       save(all);
       if (d.regenerate) makeDraft(q.id);
-      return send(200, { ok: true });
+      if (d.outreach) followup.queueOutreach(q.id);
+      if (d.callSheet) followup.makeCallSheet(q.id);
+      if (d.sendEmail) {
+        try { await followup.sendEmail(q.id, d.emailKind || 'itinerary'); }
+        catch (e) { return send(400, { error: e.message }); }
+      }
+      return send(200, { ok: true, item: load().find(x => String(x.id) === m[1]) });
     }
     if (req.method === 'GET' && (url.pathname === '/' || url.pathname === '/inquiries.html'))
       return send(200, fs.readFileSync(path.join(__dirname, 'inquiries.html')), 'text/html');
@@ -85,4 +93,4 @@ const server = http.createServer(async (req, res) => {
   } catch (e) { send(500, { error: e.message }); }
 });
 server.listen(PORT, '::', () => console.log(`Zion Luxe (private) on http://localhost:${PORT} and over Tailscale on port ${PORT}`));
-if (process.env.SCRAPE !== 'off') scraper.start(api, log);
+if (process.env.SCRAPE !== 'off') { scraper.start(api, log); followup.start(); }

@@ -22,7 +22,7 @@ Cabin and routing suggestions only (no prices).
 3-5 questions to refine the proposal.
 ## Next step
 One line: Nabeel will follow up personally to refine this together.
-Sign off: Nabeel Mumtaz, Zion Luxe, LLC · (636) 214-7701 · nabeelmumtaz92@gmail.com`;
+Sign off: Nabeel Mumtaz, Zion Luxe, LLC · (636) 214-7701 · ${process.env.ZION_FROM_EMAIL || "nabeelmumtaz92@gmail.com"}`;
 
 function userPrompt(lead) {
   const who = lead.forum ? "(public forum user: do NOT use their username; open with 'Hello,'. The source is their public post below, so keep it helpful and low-pressure.)" : lead.name;
