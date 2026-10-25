@@ -4,7 +4,7 @@
 //   3. once the form is in: a fresh draft with their details, emailed to them with the Calendly link, and a nudge 2 days later
 //   4. a call sheet for the sales call
 // Settings come from ~/.zion-luxe/.env (loaded by itinerary/providers.js); restart the server after changing them.
-const { outreach, callSheet, nudgeEmail } = require('./itinerary/extras');
+const { outreach, callSheet, nudgeEmail, replyMessage, contactFrom } = require('./itinerary/extras');
 
 const env = (k, d = '') => process.env[k] || d;
 const FORM_URL = () => env('ZION_FORM_URL').replace(/\/$/, '');
@@ -182,6 +182,44 @@ function createFollowup({ load, save, makeDraft, log }) {
     }
   }
 
+  // Their reply to our first message (pasted on the dashboard) -> our AI-written second message.
+  // Contact details they typed are saved; once there is an email, it continues like a filled-in form.
+  function queueReply(id, theirText) {
+    const text = String(theirText || '').trim().slice(0, 5000);
+    if (!text) return false;
+    const found = contactFrom(text);
+    patch(id, x => {
+      if (!x.thread) x.thread = x.outreach ? [{ from: 'us', text: x.outreach, at: x.date }] : [];
+      x.thread.push({ from: 'them', text, at: new Date().toISOString() });
+      if (found.email && !x.email) x.email = found.email;
+      if (found.phone && !x.phone) x.phone = found.phone;
+      if (found.okToText) x.okToText = true;
+      if (x.status === 'New') x.status = 'Replied';
+      x.replyStatus = 'writing';
+    });
+    return enqueue('reply', id, async () => {
+      const q = get(id);
+      try {
+        const r = await replyMessage(q, text, q.thread.slice(0, -1));
+        const out = r.text.replace('{LINK}', formLink(q));
+        patch(id, x => Object.assign(x, { replyDraft: out, replyStatus: r.problems.length ? 'needs review' : 'ready' }));
+      } catch (e) { patch(id, x => { x.replyStatus = 'error: ' + e.message.slice(-200); }); throw e; }
+      const after = get(id);
+      if (after.email && found.email && after.status !== 'Form filled') {
+        patch(id, x => { x.status = 'Form filled'; x.foundOnForum = true; x.forum = false; });
+        queueAfterForm(id);
+      }
+    });
+  }
+  // Nabeel copied and sent our reply: keep it in the conversation history
+  function markReplySent(id) {
+    patch(id, x => {
+      if (!x.replyDraft) return;
+      x.thread = [...(x.thread || []), { from: 'us', text: x.replyDraft, at: new Date().toISOString() }];
+      x.replyDraft = ''; x.replyStatus = 'sent';
+    });
+  }
+
   function start() {
     ensureRefs();
     const every = (ms, fn) => { const run = () => Promise.resolve().then(fn).catch(e => log(e.message.slice(0, 200))); run(); setInterval(run, ms); };
@@ -192,7 +230,7 @@ function createFollowup({ load, save, makeDraft, log }) {
     log(`follow-up: form ${s.form ? 'on' : 'off'}, email ${s.email ? (s.autoEmail ? 'on' : 'manual only') : 'not set up'}, calendly ${s.calendly ? 'on' : 'not set'}`);
   }
 
-  return { start, setup, md, queueOutreach, queueAfterForm, sendEmail, makeCallSheet: (id) => enqueue('callSheet', id, () => makeCallSheet(id)), ensureRefs };
+  return { start, setup, md, queueOutreach, queueReply, markReplySent, queueAfterForm, sendEmail, makeCallSheet: (id) => enqueue('callSheet', id, () => makeCallSheet(id)), ensureRefs };
 }
 
 module.exports = { createFollowup, md, esc };

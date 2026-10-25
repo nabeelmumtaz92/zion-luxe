@@ -78,4 +78,37 @@ ${String(lead.draft || '').slice(0, 3000)}`;
   return ruleChecked(NUDGE_SYSTEM, user);
 }
 
-module.exports = { outreach, callSheet, nudgeEmail };
+const REPLY_SYSTEM = `You write Nabeel Mumtaz's reply (Zion Luxe, luxury travel planning) to a traveler who answered his first private message
+about their trip. Calm, warm, understated, human. Plain text, no Markdown. 50 to 120 words. Open with "Hi," or their first name if they gave it.
+- Respond to what they actually said first (thank them, answer their question honestly, or acknowledge a detail).
+- Then ask for what is still missing so Nabeel can send their draft itinerary and call them, as a short list, only the items not already given:
+  their name, best phone number, email address, and whether it is OK to text them at that number.
+- Mention they can instead fill in the short form at the link: put the exact text {LINK} on its own line.
+- If they say they are not interested, reply graciously in one or two sentences, ask for nothing, and leave out {LINK}.
+- End with: Nabeel, Zion Luxe
+${RULES}`;
+
+// Contact details the traveler typed into their reply
+function contactFrom(text) {
+  const t = String(text || '');
+  const email = (t.match(/[^\s@<>()]+@[^\s@<>()]+\.[a-z]{2,}/i) || [])[0] || '';
+  const phone = ((t.match(/(\+?\d[\d\s().-]{8,}\d)/) || [])[1] || '').trim();
+  const okToText = /\b(text(ing)? (is|me|works|would be)? ?(fine|ok|okay|good|great)|ok(ay)? to text|you can text|feel free to text|text me)\b/i.test(t);
+  return { email, phone, okToText };
+}
+
+function replyMessage(lead, theirText, thread = []) {
+  const history = thread.slice(-6).map(m => `${m.from === 'us' ? 'Nabeel' : 'Traveler'}: ${String(m.text).slice(0, 1500)}`).join('\n\n');
+  const user = `Their original post (from ${lead.source}): ${lead.postTitle || ''}
+${String(lead.notes || '').slice(0, 1500)}
+Already known: name ${lead.forum ? '(not given)' : lead.name || '(not given)'}; phone ${lead.phone || '(not given)'}; email ${lead.email || '(not given)'}; OK to text: ${lead.okToText ? 'yes' : '(not asked)'}
+
+Conversation so far:
+${history || '(our first message)'}
+
+Their new reply:
+${String(theirText).slice(0, 3000)}`;
+  return ruleChecked(REPLY_SYSTEM, user);
+}
+
+module.exports = { outreach, callSheet, nudgeEmail, replyMessage, contactFrom };

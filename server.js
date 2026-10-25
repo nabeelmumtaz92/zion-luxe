@@ -11,7 +11,7 @@ const load = () => { try { return JSON.parse(fs.readFileSync(DB, 'utf8')); } cat
 const save = (x) => fs.writeFileSync(DB, JSON.stringify(x, null, 2));
 const SEEN = path.join(__dirname, 'data', 'screened.json');
 const seenFile = { get: () => { try { return JSON.parse(fs.readFileSync(SEEN, 'utf8')); } catch { return []; } }, set: (x) => fs.writeFileSync(SEEN, JSON.stringify(x)) };
-const STATUSES = ['New', 'Contacted', 'Proposal sent', 'Booked', 'Traveled', 'Not a fit / No response'];
+const STATUSES = ['New', 'Replied', 'Form filled', 'Contacted', 'Proposal sent', 'Booked', 'Traveled', 'Not a fit / No response'];
 
 function body(req) {
   return new Promise((res) => { let b = ''; req.on('data', c => { b += c; if (b.length > 1e6) req.destroy(); }); req.on('end', () => res(b)); });
@@ -80,6 +80,8 @@ const server = http.createServer(async (req, res) => {
       save(all);
       if (d.regenerate) makeDraft(q.id);
       if (d.outreach) followup.queueOutreach(q.id);
+      if (d.theirReply) followup.queueReply(q.id, d.theirReply);
+      if (d.replySent) followup.markReplySent(q.id);
       if (d.callSheet) followup.makeCallSheet(q.id);
       if (d.sendEmail) {
         try { await followup.sendEmail(q.id, d.emailKind || 'itinerary'); }

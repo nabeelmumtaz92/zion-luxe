@@ -51,6 +51,14 @@ function show(){const q=data.items.find(x=>x.id==sel);if(!q)return;
     <button onclick="navigator.clipboard.writeText(document.getElementById('out').value)">Copy message</button>
     <button onclick="upd(${q.id},{outreach:1})">Regenerate message</button>
   </div>
+  ${(q.thread||[]).filter(m=>m.from==='them'||q.thread.indexOf(m)>0).map(m=>`<div class="muted" style="margin:6px 0;white-space:pre-wrap"><b>${m.from==='us'?'You':'Them'}:</b> ${esc(m.text)}</div>`).join('')}
+  <b style="display:block;margin-top:10px">Step 2: They replied?</b>
+  <textarea style="min-height:70px" id="their" placeholder="Paste their reply here" oninput="editing=true"></textarea>
+  <div class="row"><button onclick="upd(${q.id},{theirReply:document.getElementById('their').value})">Write our reply</button>
+   <span class="muted">${q.replyStatus?'Reply: '+esc(q.replyStatus):''}</span></div>
+  ${q.replyDraft?`<textarea style="min-height:90px" id="rep">${esc(q.replyDraft)}</textarea>
+  <div class="row"><button onclick="navigator.clipboard.writeText(document.getElementById('rep').value)">Copy reply</button>
+   <button onclick="upd(${q.id},{replySent:1})">I sent it</button></div>`:''}
  </div>
 
  <div style="background:#141419;border:1px solid #262630;border-radius:8px;padding:12px;margin:12px 0">
