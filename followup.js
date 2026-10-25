@@ -4,7 +4,7 @@
 //   3. once the form is in: a fresh draft with their details, emailed to them with the Calendly link, and a nudge 2 days later
 //   4. a call sheet for the sales call
 // Settings come from ~/.zion-luxe/.env (loaded by itinerary/providers.js); restart the server after changing them.
-const { outreach, callSheet } = require('./itinerary/extras');
+const { outreach, callSheet, nudgeEmail } = require('./itinerary/extras');
 
 const env = (k, d = '') => process.env[k] || d;
 const FORM_URL = () => env('ZION_FORM_URL').replace(/\/$/, '');
@@ -136,10 +136,17 @@ function createFollowup({ load, save, makeDraft, log }) {
     });
     return transport;
   }
-  function compose(q, kind) {
+  async function compose(q, kind) {
     const cal = env('CALENDLY_URL'), dest = q.destination && q.destination !== 'Not stated' ? q.destination : 'your trip';
     const subject = `Your ${dest} draft itinerary`;
     if (kind === 'nudge') {
+      // AI-written, re-asking the 4 planning questions; the fixed text below is the fallback if every AI provider fails
+      try {
+        const r = await nudgeEmail(q);
+        if (!r.problems.length && r.text.includes('{CAL}')) {
+          return { subject: 'Re: ' + subject, text: r.text.replace('{CAL}', cal || '(or reply with a good time to call)') };
+        }
+      } catch (e) { log(`nudge email AI failed, using the standard text: ${e.message.slice(0, 120)}`); }
       const text = `Hi ${first(q.name)},\n\nI wanted to check whether the draft for ${dest} was useful. ` +
         (cal ? `If you'd like to talk it through, you can pick a time here:\n${cal}\n\n` : `If you'd like to talk it through, reply with a good time to call.\n\n`) +
         `Or reply with any changes and I will update it.\n\nNabeel Mumtaz\nZion Luxe, LLC · (636) 214-7701`;
@@ -155,7 +162,7 @@ function createFollowup({ load, save, makeDraft, log }) {
     if (!q || !q.email) throw new Error('no email address');
     if (!emailReady()) throw new Error('email is not set up (SMTP_USER / SMTP_PASS in ~/.zion-luxe/.env)');
     if (kind === 'itinerary' && !q.draft) throw new Error('no draft yet');
-    const { subject, text } = compose(q, kind);
+    const { subject, text } = await compose(q, kind);
     const from = env('ZION_FROM_EMAIL', env('SMTP_USER'));
     const rec = { at: new Date().toISOString(), kind, to: q.email, subject };
     try {

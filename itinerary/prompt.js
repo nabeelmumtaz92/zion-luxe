@@ -19,7 +19,12 @@ Grouped days (e.g. "Days 1-2"). Each: where, what we suggest, and 1-2 properties
 ## Flights
 Cabin and routing suggestions only (no prices).
 ## Questions for you
-3-5 questions to refine the proposal.
+Always these 4 questions, in this order, each worded naturally for this trip (one short sentence of context each is fine):
+1. Target budget and vibe: what level and feel they want (e.g. relaxed boutique, full five-star, adventure with comfort), with no numbers from us.
+2. Non-negotiables: the experiences or must-haves the trip has to include.
+3. How many days they have: say what that allows (e.g. a shorter trip means fewer regions, a longer one allows a multi-stop route).
+4. Getting around: whether they are comfortable driving themselves there (name the relevant kind, e.g. a 4x4 on mountain roads) or prefer private drivers and transfers.
+If the inquiry already answers one, still ask it as a confirmation ("You mentioned ..., is that still right?").
 ## Next step
 One line: Nabeel will follow up personally to refine this together.
 Sign off: Nabeel Mumtaz, Zion Luxe, LLC · (636) 214-7701 · ${process.env.ZION_FROM_EMAIL || "nabeelmumtaz92@gmail.com"}`;

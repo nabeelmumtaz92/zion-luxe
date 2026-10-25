@@ -59,4 +59,23 @@ ${String(lead.draft || '(none yet)').slice(0, 5000)}`;
   return ruleChecked(CALL_SYSTEM, user);
 }
 
-module.exports = { outreach, callSheet };
+const NUDGE_SYSTEM = `You write a short follow-up email from Nabeel Mumtaz (Zion Luxe, luxury travel planning) to a prospect who received
+a draft itinerary two days ago and has not replied or booked a call. Calm, warm, low-pressure, personal. Plain text, no Markdown, no subject line.
+- 90 to 150 words. Open with "Hi <first name>,".
+- Refer to one specific detail of their trip so it is clearly written for them.
+- Ask the 4 planning questions, briefly, as a short numbered list, worded for this trip; if one is already answered, ask it as a quick confirmation:
+  1. budget level and vibe (no numbers from us), 2. non-negotiables, 3. how many days they have, 4. driving themselves vs private drivers/transfers.
+- Say they can simply reply with answers, or pick a call time. Put the exact text {CAL} on its own line where the booking link goes.
+- Sign off exactly: Nabeel Mumtaz / Zion Luxe, LLC · (636) 214-7701
+${RULES}`;
+
+function nudgeEmail(lead) {
+  const user = `First name: ${String(lead.name || '').trim().split(/\s+/)[0]}
+Destination: ${lead.destination} · When: ${lead.dates} · Travelers: ${lead.travelers} · Trip type: ${lead.tripType} · Budget: ${lead.budget}
+Their notes: ${String(lead.formNotes || lead.notes || '-').slice(0, 2000)}
+Draft itinerary we sent (for reference):
+${String(lead.draft || '').slice(0, 3000)}`;
+  return ruleChecked(NUDGE_SYSTEM, user);
+}
+
+module.exports = { outreach, callSheet, nudgeEmail };
